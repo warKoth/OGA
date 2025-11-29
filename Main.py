@@ -6,6 +6,7 @@ from typing import List
 from dataclasses import dataclass
 import random
 
+#1. Pattern Observateur : Permet de notifier les changement d'état d'un sujet aux observateurs enregistrés.
 #Classe observateur pour le pattern observateur
 class Observer(ABC):
     @abstractmethod
@@ -26,3 +27,18 @@ class Subject(ABC):
     def notify(self, event:str):
         for observer in self._observers:
             observer.update(self, event)
+
+#2. Pattern Composite : Permet de composer des objets en structures arborescentes pour représenter des hiérarchies partie-tout.
+class UniteAbstaite(ABC, Subject):
+    """Classe de base pour toutes les unités militaires."""
+    def __init__(self, name: str):
+        super().__init__()
+        self.name = name
+
+    @abstractmethod
+    def get_strength(self) -> int:
+        pass
+
+    @abstractmethod
+    def get_description(self) -> str:
+        pass    
