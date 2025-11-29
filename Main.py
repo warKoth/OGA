@@ -36,9 +36,72 @@ class UniteAbstaite(ABC, Subject):
         self.name = name
 
     @abstractmethod
-    def get_strength(self) -> int:
+    def get_effectif(self) -> int:
         pass
 
     @abstractmethod
-    def get_description(self) -> str:
+    def get_puissance_totale(self) -> int:
         pass    
+
+    @abstractmethod
+    def afficher(self, indent: int = 0):
+        pass
+
+class Soldat(UniteAbstaite):
+    """Classe représentant un soldat individuel."""
+    def __init__(self, name: str, puissance: int, grade:str, defense:int, vitesse:int, experience:int):
+        super().__init__(name)
+        self.puissance = puissance
+        self.grade = grade
+        self.defense = defense
+        self.vitesse = vitesse
+        self.experience = experience
+
+    def get_effectif(self) -> int:
+        return 1
+
+    def get_puissance_totale(self) -> int:
+        return self.puissance + self.defense + self.vitesse 
+
+    def afficher(self, indent: int = 0):
+        print(' ' * indent + f"└─ {self.grade} {self.name} [F: {self.puissance} D: {self.defense} V: {self.vitesse} ]")
+
+    def gagner_experience(self, points:int):
+        self.experience += points
+        self.notify(f"{self.name} a gagné {points} points XP.")
+
+class Groupe(UniteAbstaite):
+    """Classe représentant un groupe d'unités militaires."""
+    def __init__(self, name: str, Commandant: Soldat = None):
+        super().__init__(name)
+        self.commandant = Commandant
+        self.membres: List[UniteAbstaite] = []
+
+    def ajouter_unite(self, unite: UniteAbstaite):
+        self.membres.append(unite)
+        self.notify(f"Unité {unite.name} ajoutée à {self.name}.")
+
+    def retirer_unite(self, unite: UniteAbstaite):
+        self.membres.remove(unite)
+        self.notify(f"Unité {unite.name} retirée de {self.name}.")
+
+    def get_effectif(self) -> int:
+        total = 1 if self.commandant else 0
+        for membre in self.membres:
+            total += membre.get_effectif()
+        return total
+
+    def get_puissance_totale(self) -> int:
+        total = self.commandant.get_puissance_totale() if self.commandant else 0
+        for membre in self.membres:
+            total += membre.get_puissance_totale()
+        return total
+
+    def afficher(self, indent=0):
+        prefix = "  " * indent
+        print(f"{prefix}┌─ {self.nom} (Effectif: {self.get_effectif()})")
+        if self.commandant:
+            print(f"{prefix}│  Commandant:")
+            self.commandant.afficher(indent + 1)
+        for membre in self.membres:
+            membre.afficher(indent + 1)
