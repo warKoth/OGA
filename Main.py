@@ -105,3 +105,36 @@ class Groupe(UniteAbstaite):
             self.commandant.afficher(indent + 1)
         for membre in self.membres:
             membre.afficher(indent + 1)
+
+#3. Pattern Factory : Permet de créer des objets sans exposer la logique de création au client.
+class TroupeFactory:
+    """Classe factory pour créer des unités militaires."""
+    @staticmethod
+    def creer_soldat(name: str, grade:str) -> Soldat:
+        puissance = random.randint(5, 15)
+        defense = random.randint(5, 15)
+        vitesse = random.randint(5, 15)
+        experience = 0
+        return Soldat(name, puissance, grade, defense, vitesse, experience)
+    
+    @staticmethod
+    def creer_soldat_special(name: str, grade:str, puissance:int, defense:int, vitesse:int) -> Soldat:
+        puissance = random.randint(9, 25)
+        defense = random.randint(9, 25)
+        vitesse = random.randint(10, 25)
+        experience = 0
+        return Soldat(name, puissance, grade, defense, vitesse, experience)
+
+#Decorator Pattern : Permet d'ajouter dynamiquement des responsabilités supplémentaires à un objet.
+class EquipementDecorator(UniteAbstaite):
+    """Classe de base pour les décorateurs d'équipement."""
+    def __init__(self, soldat: Soldat):
+        super().__init__(soldat.name)
+        self.soldat = soldat
+    
+    def get_effectif(self) -> int:
+        return self.soldat.get_effectif()
+    
+    def afficher(self, indent: int = 0):
+        self.soldat.afficher(indent)
+
