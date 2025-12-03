@@ -124,6 +124,14 @@ class TroupeFactory:
         vitesse = random.randint(10, 25)
         experience = 0
         return Soldat(name, puissance, grade, defense, vitesse, experience)
+    
+    @staticmethod
+    def creer_officier(name: str, grade:str) -> Soldat:
+        puissance = random.randint(15, 30)
+        defense = random.randint(15, 30)
+        vitesse = random.randint(15, 30)
+        experience = 0
+        return Soldat(name, puissance, grade, defense, vitesse, experience)
 
 #Decorator Pattern : Permet d'ajouter dynamiquement des responsabilités supplémentaires à un objet.
 class EquipementDecorator(UniteAbstaite):
@@ -210,15 +218,18 @@ if __name__ == "__main__":
     soldat4 = TroupeFactory.creer_soldat("Marc", "Soldat")
     soldat5 = TroupeFactory.creer_soldat("Paul", "Caporal")
     soldat6 = TroupeFactory.creer_soldat("Antoine", "Soldat")
+    officier1 = TroupeFactory.creer_officier("Alice", "Lieutenant")
 
     # Decorateurs pour équiper les soldats
     soldat1 = FusilDecorator(soldat1)
     soldat2 = GiletPareBallesDecorator(soldat2)
     soldat3 = BottesOfficierDecorator(soldat3)
     soldat4 = FusilDecorator(soldat4)
+    officier1 = GiletPareBallesDecorator(officier1)
+    
 
     # Création de groupes
-    escouade1 = Groupe("Escouade Alpha", Commandant=soldat1)
+    escouade1 = Groupe("Escouade Alpha", Commandant=officier1)
     escouade1.attach(journal)
 
     escouade2 = Groupe("Escouade Bravo", Commandant=soldat3)
