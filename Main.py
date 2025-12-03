@@ -29,7 +29,7 @@ class Subject(ABC):
             observer.update(self, event)
 
 #2. Pattern Composite : Permet de composer des objets en structures arborescentes pour représenter des hiérarchies partie-tout.
-class UniteAbstaite(ABC, Subject):
+class UniteAbstaite(Subject, ABC):
     """Classe de base pour toutes les unités militaires."""
     def __init__(self, name: str):
         super().__init__()
@@ -99,7 +99,7 @@ class Groupe(UniteAbstaite):
 
     def afficher(self, indent=0):
         prefix = "  " * indent
-        print(f"{prefix}┌─ {self.nom} (Effectif: {self.get_effectif()})")
+        print(f"{prefix}┌─ {self.name} (Effectif: {self.get_effectif()})")
         if self.commandant:
             print(f"{prefix}│  Commandant:")
             self.commandant.afficher(indent + 1)
@@ -137,4 +137,113 @@ class EquipementDecorator(UniteAbstaite):
     
     def afficher(self, indent: int = 0):
         self.soldat.afficher(indent)
+
+class FusilDecorator(EquipementDecorator):
+    """Décorateur pour ajouter un fusil à un soldat."""
+    def __init__(self, soldat: Soldat):
+        super().__init__(soldat)
+        self.soldat.puissance += 5
+        self.notify(f"{self.soldat.name} équipé d'un fusil (+5 puissance).")
+
+    def get_puissance_totale(self) -> int:
+        return self.soldat.get_puissance_totale()
+    
+    def afficher(self, indent: int = 0):
+        print("  " * indent + f"└─ {self.soldat.grade} {self.soldat.name} [F:{self.soldat.puissance} D:{self.soldat.defense}⬆ V:{self.soldat.vitesse}] +Fusil")
+
+class GiletPareBallesDecorator(EquipementDecorator):
+    """Décorateur pour ajouter un gilet pare-balles à un soldat."""
+    def __init__(self, soldat: Soldat):
+        super().__init__(soldat)
+        self.soldat.defense += 5
+        self.notify(f"{self.soldat.name} équipé d'un gilet pare-balles (+5 défense).")
+
+    def get_puissance_totale(self) -> int:
+        return self.soldat.get_puissance_totale()
+    
+    def afficher(self, indent=0):
+        print("  " * indent + f"└─ {self.soldat.grade} {self.soldat.name} [F:{self.soldat.puissance} D:{self.soldat.defense}⬆ V:{self.soldat.vitesse}] +Gilet")
+
+class BottesOfficierDecorator(EquipementDecorator):
+    """Décorateur pour ajouter des bottes d'officier à un soldat."""
+    def __init__(self, soldat: Soldat):
+        super().__init__(soldat)
+        self.soldat.vitesse += 5
+        self.notify(f"{self.soldat.name} équipé de bottes d'officier (+5 vitesse).")
+    
+    def get_puissance_totale(self) -> int:
+        return self.soldat.get_puissance_totale()
+    
+    def afficher(self, indent=0):
+        print("  " * indent + f"└─ {self.soldat.grade} {self.soldat.name} [F:{self.soldat.puissance} D:{self.soldat.defense}⬆ V:{self.soldat.vitesse}] +Bottes")
+
+# Class d'observateur concret journal des evenements
+class JournalCombat(Observer):
+    """Classe observateur pour enregistrer les événements de combat."""
+    
+    def __init__(self):
+        self.historique = []
+
+    def update (self, subject, event: str):
+        self.historique.append(event)
+        print(f"[Journal] {event}")
+
+    def afficher_historique(self):
+        print("\n ======Historique des événements de combat======")
+        for i, event in enumerate(self.historique, 1):
+            print(f"{i}. {event}")
+
+# Exemple d'utilisation
+if __name__ == "__main__":
+    print ("Simulation de création d'armée avec patterns de conception\n")
+
+    # creation d'un observateur
+    journal = JournalCombat()
+
+    # Factory pour créer des soldats
+
+    Factory = TroupeFactory()
+
+    soldat1 = TroupeFactory.creer_soldat("Jean", "Caporal")
+    soldat2 = TroupeFactory.creer_soldat("Pierre", "Soldat")
+    soldat3 = TroupeFactory.creer_soldat_special("Luc", "Sergent", 20, 15, 10)
+    soldat4 = TroupeFactory.creer_soldat("Marc", "Soldat")
+    soldat5 = TroupeFactory.creer_soldat("Paul", "Caporal")
+    soldat6 = TroupeFactory.creer_soldat("Antoine", "Soldat")
+
+    # Decorateurs pour équiper les soldats
+    soldat1 = FusilDecorator(soldat1)
+    soldat2 = GiletPareBallesDecorator(soldat2)
+    soldat3 = BottesOfficierDecorator(soldat3)
+    soldat4 = FusilDecorator(soldat4)
+
+    # Création de groupes
+    escouade1 = Groupe("Escouade Alpha", Commandant=soldat1)
+    escouade1.attach(journal)
+
+    escouade2 = Groupe("Escouade Bravo", Commandant=soldat3)
+    escouade2.attach(journal)
+
+    escouade1.ajouter_unite(soldat2)
+    escouade1.ajouter_unite(soldat4)
+    escouade2.ajouter_unite(soldat5)
+    escouade2.ajouter_unite(soldat6)
+
+    # Affichage de la structure de l'armée
+    print ("\nStructure de l'armée :")
+    escouade1.afficher()
+    escouade2.afficher()
+
+    print (f"\nEffectif total de l'armée : {escouade1.get_effectif() + escouade2.get_effectif()}")
+    print (f"Puissance totale de l'armée : {escouade1.get_puissance_totale() + escouade2.get_puissance_totale()}\n")
+
+    # Simuler des gains d'expérience
+    soldat5.gagner_experience(15)
+    soldat6.gagner_experience(5)
+
+
+    # Affichage de l'historique des événements
+    journal.afficher_historique()
+
+
 
