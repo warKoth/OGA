@@ -111,6 +111,25 @@ class Groupe(UniteAbstaite):
         self.membres.remove(unite)
         self.notify(f"Unité {unite.name} retirée de {self.name}.")
 
+    def equiper_all(self, equipement: str):
+        if self.commandant:
+            self.commandant.equiper(equipement)
+        for membre in self.membres:
+            if isinstance(membre, Soldat):
+                membre.equiper(equipement)
+            elif isinstance(membre, Groupe):
+                membre.equiper_all(equipement)
+
+    def desequiper_all(self, equipement: str):
+        if self.commandant:
+            self.commandant.desequiper(equipement)
+        for membre in self.membres:
+            if isinstance(membre, Soldat):
+                membre.desequiper(equipement)
+            elif isinstance(membre, Groupe):
+                membre.desequiper_all(equipement)
+        
+
     def get_effectif(self) -> int:
         total = 1 if self.commandant else 0
         for membre in self.membres:
@@ -241,6 +260,10 @@ if __name__ == "__main__":
     escouade1.ajouter_unite(soldat4)
     escouade2.ajouter_unite(soldat5)
     escouade2.ajouter_unite(soldat6)
+
+    #equipement de groupe 
+
+    escouade2.equiper_all(GiletPareBalles())
 
     # Affichage de la structure de l'armée
     print ("\nStructure de l'armée :")
