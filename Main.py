@@ -49,22 +49,48 @@ class UniteAbstaite(Subject, ABC):
 
 class Soldat(UniteAbstaite):
     """Classe représentant un soldat individuel."""
-    def __init__(self, name: str, puissance: int, grade:str, defense:int, vitesse:int, experience:int):
+    def __init__(self, name: str, puissance: int, grade:str, defense:int, vitesse:int, experience:int, equipements :list = None):
         super().__init__(name)
         self.puissance = puissance
         self.grade = grade
         self.defense = defense
         self.vitesse = vitesse
         self.experience = experience
+        self.equipements = [] if equipements is None else equipements
+
+    def equiper(self, equipement: str):
+        name = equipement.nom if hasattr(equipement, 'nom') else str(equipement)
+        self.equipements.append(equipement)
+        self.notify(f"{self.name} est équipé de {name}.")
+
+    def desequiper(self, equipement: str):
+        name = equipement.nom if hasattr(equipement, 'nom') else str(equipement)
+        self.equipements.remove(equipement)
+        self.notify(f"{self.name} s'est déséquipé de {name}.")
+
 
     def get_effectif(self) -> int:
         return 1
 
     def get_puissance_totale(self) -> int:
-        return self.puissance + self.defense + self.vitesse 
+        # Base stats
+        total = self.puissance + self.defense + self.vitesse
+        # Add equipment bonuses when equipment objects are present
+        bonus = 0
+        for eq in self.equipements:
+            if hasattr(eq, 'puissance_bonus') or hasattr(eq, 'defense_bonus') or hasattr(eq, 'vitesse_bonus'):
+                pb = getattr(eq, 'puissance_bonus', 0)
+                db = getattr(eq, 'defense_bonus', 0)
+                vb = getattr(eq, 'vitesse_bonus', 0)
+                bonus += (pb + db + vb)
+        return total + bonus
 
     def afficher(self, indent: int = 0):
-        print(' ' * indent + f"└─ {self.grade} {self.name} [F: {self.puissance} D: {self.defense} V: {self.vitesse} ]")
+        equip_names = []
+        for e in self.equipements:
+            equip_names.append(e.nom if hasattr(e, 'nom') else str(e))
+        equip_str = ', '.join(equip_names) if equip_names else 'Rien'
+        print(' ' * indent + f"└─ {self.grade} {self.name} [F: {self.puissance} D: {self.defense} V: {self.vitesse} ] equipé de : {equip_str}")
 
     def gagner_experience(self, points:int):
         self.experience += points
@@ -133,57 +159,34 @@ class TroupeFactory:
         experience = 0
         return Soldat(name, puissance, grade, defense, vitesse, experience)
 
-#Decorator Pattern : Permet d'ajouter dynamiquement des responsabilités supplémentaires à un objet.
-class EquipementDecorator(UniteAbstaite):
-    """Classe de base pour les décorateurs d'équipement."""
-    def __init__(self, soldat: Soldat):
-        super().__init__(soldat.name)
-        self.soldat = soldat
-    
-    def get_effectif(self) -> int:
-        return self.soldat.get_effectif()
-    
-    def afficher(self, indent: int = 0):
-        self.soldat.afficher(indent)
 
-class FusilDecorator(EquipementDecorator):
-    """Décorateur pour ajouter un fusil à un soldat."""
-    def __init__(self, soldat: Soldat):
-        super().__init__(soldat)
-        self.soldat.puissance += 5
-        self.notify(f"{self.soldat.name} équipé d'un fusil (+5 puissance).")
-
-    def get_puissance_totale(self) -> int:
-        return self.soldat.get_puissance_totale()
+# Class equipement Decorator
+class Equipement:
+    """Classe de base pour les équipements."""
+    def __init__(self, nom: str, puissance_bonus: int, defense_bonus: int, vitesse_bonus: int):
+        self.nom = nom
+        self.puissance_bonus = puissance_bonus
+        self.defense_bonus = defense_bonus
+        self.vitesse_bonus = vitesse_bonus
     
-    def afficher(self, indent: int = 0):
-        print("  " * indent + f"└─ {self.soldat.grade} {self.soldat.name} [F:{self.soldat.puissance} D:{self.soldat.defense}⬆ V:{self.soldat.vitesse}] +Fusil")
-
-class GiletPareBallesDecorator(EquipementDecorator):
-    """Décorateur pour ajouter un gilet pare-balles à un soldat."""
-    def __init__(self, soldat: Soldat):
-        super().__init__(soldat)
-        self.soldat.defense += 5
-        self.notify(f"{self.soldat.name} équipé d'un gilet pare-balles (+5 défense).")
-
-    def get_puissance_totale(self) -> int:
-        return self.soldat.get_puissance_totale()
+class Fusil(Equipement):
+    """Classe représentant un fusil."""
+    def __init__(self):
+        super().__init__("Fusil", puissance_bonus=5, defense_bonus=0, vitesse_bonus=0)
     
-    def afficher(self, indent=0):
-        print("  " * indent + f"└─ {self.soldat.grade} {self.soldat.name} [F:{self.soldat.puissance} D:{self.soldat.defense}⬆ V:{self.soldat.vitesse}] +Gilet")
 
-class BottesOfficierDecorator(EquipementDecorator):
-    """Décorateur pour ajouter des bottes d'officier à un soldat."""
-    def __init__(self, soldat: Soldat):
-        super().__init__(soldat)
-        self.soldat.vitesse += 5
-        self.notify(f"{self.soldat.name} équipé de bottes d'officier (+5 vitesse).")
+class GiletPareBalles(Equipement):
+    """Classe représentant un gilet pare-balles."""
+    def __init__(self):
+        super().__init__("Gilet Pare-Balles", puissance_bonus=0, defense_bonus=5, vitesse_bonus=0)
+
+class BottesOfficier(Equipement):
+    """Classe représentant des bottes d'officier."""
+    def __init__(self):
+        super().__init__("Bottes d'Officier", puissance_bonus=0, defense_bonus=0, vitesse_bonus=5)
+
     
-    def get_puissance_totale(self) -> int:
-        return self.soldat.get_puissance_totale()
-    
-    def afficher(self, indent=0):
-        print("  " * indent + f"└─ {self.soldat.grade} {self.soldat.name} [F:{self.soldat.puissance} D:{self.soldat.defense}⬆ V:{self.soldat.vitesse}] +Bottes")
+
 
 # Class d'observateur concret journal des evenements
 class JournalCombat(Observer):
@@ -220,13 +223,12 @@ if __name__ == "__main__":
     soldat6 = TroupeFactory.creer_soldat("Antoine", "Soldat")
     officier1 = TroupeFactory.creer_officier("Alice", "Lieutenant")
 
-    # Decorateurs pour équiper les soldats
-    soldat1 = FusilDecorator(soldat1)
-    soldat2 = GiletPareBallesDecorator(soldat2)
-    soldat3 = BottesOfficierDecorator(soldat3)
-    soldat4 = FusilDecorator(soldat4)
-    officier1 = GiletPareBallesDecorator(officier1)
-    
+    #Donner des équipements aux soldats
+    soldat1.equiper(Fusil())
+    soldat2.equiper(Fusil())
+    officier1.equiper(BottesOfficier())
+    officier1.equiper(GiletPareBalles())
+    officier1.equiper(Fusil())
 
     # Création de groupes
     escouade1 = Groupe("Escouade Alpha", Commandant=officier1)
